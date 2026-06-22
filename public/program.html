@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Program | IRECSTEM 2026</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar" id="navbar">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <a href="index.html">
+                    <div class="logo-placeholder conference-logo">
+                        <i class="fas fa-globe-americas"></i>
+                        <span>IRECSTEM</span>
+                    </div>
+                </a>
+            </div>
+            <button class="nav-toggle" id="navToggle" aria-label="Toggle navigation">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+            <ul class="nav-menu" id="navMenu">
+                <li><a href="index.html" class="nav-link">Home</a></li>
+                <li><a href="about.html" class="nav-link">About</a></li>
+                <li><a href="call-for-papers.html" class="nav-link">Call for Papers</a></li>
+                <li><a href="speakers.html" class="nav-link">Speakers</a></li>
+                <li><a href="program.html" class="nav-link active">Program</a></li>
+                <li><a href="registration.html" class="nav-link">Registration</a></li>
+                <li><a href="venue.html" class="nav-link">Venue</a></li>
+                <li><a href="committee.html" class="nav-link">Committee</a></li>
+                <li><a href="contact.html" class="nav-link">Contact</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Page Hero -->
+    <section class="page-hero">
+        <div class="container">
+            <div class="breadcrumb">
+                <a href="index.html">Home</a>
+                <span>/</span>
+                <span class="current">Program</span>
+            </div>
+            <h1>Conference Program</h1>
+            <p>September 15-17, 2026</p>
+        </div>
+    </section>
+
+    <!-- Program Section -->
+    <section class="section program">
+        <div class="container">
+            <div class="section-header">
+                <span class="section-tag">Event Schedule</span>
+                <h2 class="section-title">Program Overview</h2>
+            </div>
+            <div class="program-tabs">
+                <button class="tab-btn active" data-day="1">
+                    <span class="tab-day">Day 1</span>
+                    <span class="tab-date">Sept 15, 2026</span>
+                </button>
+                <button class="tab-btn" data-day="2">
+                    <span class="tab-day">Day 2</span>
+                    <span class="tab-date">Sept 16, 2026</span>
+                </button>
+                <button class="tab-btn" data-day="3">
+                    <span class="tab-day">Day 3</span>
+                    <span class="tab-date">Sept 17, 2026</span>
+                </button>
+            </div>
+            <div class="program-content">
+                <div class="program-day active" id="day-1">
+                    <h3 style="text-align: center; margin-bottom: 30px; color: var(--navy);">
+                        <i class="fas fa-calendar-day" style="color: var(--primary); margin-right: 10px;"></i>
+                        Opening Day
+                    </h3>
+                    <div class="schedule-item">
+                        <div class="schedule-time">08:00 - 09:00</div>
+                        <div class="schedule-details">
+                            <h4>Registration & Welcome Coffee</h4>
+                            <p>Main Lobby - Pick up your badge and conference materials</p>
+                        </div>
+                    </div>
+                    <div class="schedule-item">
+                        <div class="schedule-time">09:00 - 10:00</div>
+                        <div class="schedule-details">
+                            <h4>Opening Ceremony</h4>
+                            <p>Keynote Address: Dr. Sarah Mitchell - "The Future of AI in Education"</p>
+                        </div>
+                    </div>
+                    <div class="schedule-item">
+                        <div class="schedule-time">10:00 - 12:00</div>
+                        <div class="schedule-details">
+                            <h4>Plenary Sessions</h4>
+                            <p>Parallel sessions across all tracks - Keynote presentations</p>
+                        </div>
+                    </div>
+                    <div class="schedule-item">
+                        <div class="schedule-time">12:00 - 13:30</div>
+                        <div class="schedule-details">
+                            <h4>Lunch Break</h4>
+                            <p>Conference Hall - Networking lunch provided</p>
+                        </div>
+                    </div>
+                    <div class="schedule-item">
+                        <div class="schedule-time">13:30 - 16:00</div>
+                        <div class="schedule-details">
+                            <h4>Paper Presentations</h4>
+                            <p>Technical sessions by track - Authors present their research</p>
+                        </div>
+                    </div>
+                    <div class="schedule-item">
+                        <div class="schedule-time">16:00 - 16:30</div>
+                        <div class="schedule-details">
+                            <h4>Coffee Break</h4>
+                            <p>Exhibition Hall</p>
+                        </div>
+                    </div>
+                    <div class="schedule-item">
+                        <div class="schedule-time">18:00 - 21:00</div>
+                        <div class="schedule-details">
+                            <h4>Welcome Reception</h4>
+                            <p>Gala Dinner - Cultural entertainment and networking</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="program-day" id="day-2">
+                    <h3 style="text-align: center; margin-bottom: 30px; color: var(--navy);">
+                        <i class="fas fa-calendar-day" style="color: var(--primary); margin-right: 10px;"></i>
+                        Research Day
+                    </h3>
+                    <div class="schedule-item">
+                        <div class="schedule-time">08:30 - 09:30</div>
+                        <div class="schedule-details">
+                            <h4>Morning Workshop</h4>
+                            <p>Research Methodology - Interactive session</p>
+                        </div>
+                    </div>
+                    <div class="schedule-item">
+                        <div class="schedule-time">09:30 - 11:30</div>
+                        <div class="schedule-details">
+                            <h4>Paper Presentations</h4>
+                            <p>Technical sessions continued across all tracks</p>
+                        </div>
+                    </div>
+                    <div class="schedule-item">
+                        <div class="schedule-time">11:30 - 13:00</div>
+                        <div class="schedule-details">
+                            <h4>Poster Session</h4>
+                            <p>Exhibition Hall - Visual presentations and discussions</p>
+                        </div>
+                    </div>
+                    <div class="schedule-item">
+                        <div class="schedule-time">13:00 - 14:00</div>
+                        <div class="schedule-details">
+                            <h4>Lunch Break</h4>
+                            <p>Conference Hall</p>
+                        </div>
+                    </div>
+                    <div class="schedule-item">
+                        <div class="schedule-time">14:00 - 16:00</div>
+                        <div class="schedule-details">
+                            <h4>Panel Discussion</h4>
+                            <p>Industry-Academia Collaboration - Expert panel with Q&A</p>
+                        </div>
+                    </div>
+                    <div class="schedule-item">
+                        <div class="schedule-time">16:00 - 16:30</div>
+                        <div class="schedule-details">
+                            <h4>Coffee Break</h4>
+                            <p>Networking opportunity</p>
+                        </div>
+                    </div>
+                    <div class="schedule-item">
+                        <div class="schedule-time">19:00 - 22:00</div>
+                        <div class="schedule-details">
+                            <h4>Cultural Night</h4>
+                            <p>Entertainment & Networking - Showcase of local culture</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="program-day" id="day-3">
+                    <h3 style="text-align: center; margin-bottom: 30px; color: var(--navy);">
+                        <i class="fas fa-calendar-day" style="color: var(--primary); margin-right: 10px;"></i>
+                        Closing Day
+                    </h3>
+                    <div class="schedule-item">
+                        <div class="schedule-time">09:00 - 10:30</div>
+                        <div class="schedule-details">
+                            <h4>Keynote Session</h4>
+                            <p>Prof. David Okonkwo - "Leadership in Times of Change"</p>
+                        </div>
+                    </div>
+                    <div class="schedule-item">
+                        <div class="schedule-time">10:30 - 12:00</div>
+                        <div class="schedule-details">
+                            <h4>Best Paper Presentations</h4>
+                            <p>Selected outstanding papers from all tracks</p>
+                        </div>
+                    </div>
+                    <div class="schedule-item">
+                        <div class="schedule-time">12:00 - 13:00</div>
+                        <div class="schedule-details">
+                            <h4>Networking Lunch</h4>
+                            <p>Business matching session</p>
+                        </div>
+                    </div>
+                    <div class="schedule-item">
+                        <div class="schedule-time">13:00 - 15:00</div>
+                        <div class="schedule-details">
+                            <h4>Closing Ceremony</h4>
+                            <p>Awards & Recognition - Best paper, best presentation awards</p>
+                        </div>
+                    </div>
+                    <div class="schedule-item">
+                        <div class="schedule-time">15:00 - 17:00</div>
+                        <div class="schedule-details">
+                            <h4>Excursion (Optional)</h4>
+                            <p>City tour - Explore local attractions</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Session Types -->
+    <section class="section" style="background: var(--gray-100);">
+        <div class="container">
+            <div class="section-header">
+                <span class="section-tag">Session Types</span>
+                <h2 class="section-title">Types of Sessions</h2>
+            </div>
+            <div class="tracks-grid">
+                <div class="track-card">
+                    <div class="track-icon">
+                        <i class="fas fa-microphone-alt"></i>
+                    </div>
+                    <h3>Keynote Sessions</h3>
+                    <p>Featured presentations by renowned experts covering major themes of the conference.</p>
+                </div>
+                <div class="track-card">
+                    <div class="track-icon">
+                        <i class="fas fa-chalkboard-teacher"></i>
+                    </div>
+                    <h3>Paper Presentations</h3>
+                    <p>Oral presentations of accepted research papers with Q&A sessions.</p>
+                </div>
+                <div class="track-card">
+                    <div class="track-icon">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <h3>Panel Discussions</h3>
+                    <p>Expert panels discussing current topics with audience participation.</p>
+                </div>
+                <div class="track-card">
+                    <div class="track-icon">
+                        <i class="fas fa-wrench"></i>
+                    </div>
+                    <h3>Workshops</h3>
+                    <p>Hands-on interactive sessions for skill development and learning.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-brand">
+                    <div class="footer-logo">
+                        <i class="fas fa-globe-americas"></i>
+                        <span>IRECSTEM 2026</span>
+                    </div>
+                    <p>1st International Research and Extension Conference on Science, Technology, Education, and Management</p>
+                    <p class="footer-date"><i class="far fa-calendar-alt"></i> September 2026 | Face-to-Face Conference</p>
+                </div>
+                <div class="footer-links">
+                    <h4>Quick Links</h4>
+                    <ul>
+                        <li><a href="index.html">Home</a></li>
+                        <li><a href="about.html">About</a></li>
+                        <li><a href="registration.html">Registration</a></li>
+                        <li><a href="contact.html">Contact</a></li>
+                    </ul>
+                </div>
+                <div class="footer-links">
+                    <h4>Resources</h4>
+                    <ul>
+                        <li><a href="call-for-papers.html">Call for Papers</a></li>
+                        <li><a href="program.html">Program</a></li>
+                        <li><a href="venue.html">Venue</a></li>
+                        <li><a href="sponsors.html">Sponsors</a></li>
+                    </ul>
+                </div>
+                <div class="footer-newsletter">
+                    <h4>Newsletter</h4>
+                    <p>Stay updated with conference news</p>
+                    <form class="newsletter-form" id="newsletterForm">
+                        <input type="email" placeholder="Your email address" required>
+                        <button type="submit"><i class="fas fa-arrow-right"></i></button>
+                    </form>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2026 IRECSTEM. All rights reserved.</p>
+                <div class="footer-social">
+                    <a href="#"><i class="fab fa-facebook-f"></i></a>
+                    <a href="#"><i class="fab fa-twitter"></i></a>
+                    <a href="#"><i class="fab fa-linkedin-in"></i></a>
+                    <a href="#"><i class="fab fa-instagram"></i></a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <div class="toast-container" id="toastContainer"></div>
+    <button class="back-to-top" id="backToTop"><i class="fas fa-chevron-up"></i></button>
+
+    <script src="script.js"></script>
+</body>
+</html>
