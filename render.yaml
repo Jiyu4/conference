@@ -18,9 +18,10 @@ services:
           X-Content-Type-Options: nosniff
           X-XSS-Protection: 1; mode=block
     routes:
-      - path: /
+      - path: /*
         type: rewrite
-        destination: /index.php
+        destination: /public/index.php
+
 
 # Environment variables
 envVars:
