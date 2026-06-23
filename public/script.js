@@ -3,7 +3,7 @@
  * Complete interactive functionality for all pages
  */
 
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     // Initialize all modules
     initNavigation();
     initBackToTop();
@@ -24,14 +24,14 @@ function initMobileMenu() {
     const navMenu = document.getElementById('navMenu');
 
     if (navToggle && navMenu) {
-        navToggle.addEventListener('click', function() {
+        navToggle.addEventListener('click', function () {
             navMenu.classList.toggle('active');
             this.classList.toggle('active');
         });
 
         // Close menu when clicking a link
         navMenu.querySelectorAll('.nav-link').forEach(link => {
-            link.addEventListener('click', function() {
+            link.addEventListener('click', function () {
                 navMenu.classList.remove('active');
                 navToggle.classList.remove('active');
             });
@@ -46,7 +46,7 @@ function initNavigation() {
     const navbar = document.getElementById('navbar');
 
     if (navbar) {
-        window.addEventListener('scroll', function() {
+        window.addEventListener('scroll', function () {
             if (window.scrollY > 50) {
                 navbar.classList.add('scrolled');
             } else {
@@ -63,7 +63,7 @@ function initBackToTop() {
     const backToTop = document.getElementById('backToTop');
 
     if (backToTop) {
-        window.addEventListener('scroll', function() {
+        window.addEventListener('scroll', function () {
             if (window.scrollY > 500) {
                 backToTop.classList.add('visible');
             } else {
@@ -71,7 +71,7 @@ function initBackToTop() {
             }
         });
 
-        backToTop.addEventListener('click', function() {
+        backToTop.addEventListener('click', function () {
             window.scrollTo({
                 top: 0,
                 behavior: 'smooth'
@@ -165,7 +165,7 @@ function initProgramTabs() {
     if (!tabButtons.length) return;
 
     tabButtons.forEach(button => {
-        button.addEventListener('click', function() {
+        button.addEventListener('click', function () {
             const day = this.getAttribute('data-day');
 
             tabButtons.forEach(btn => btn.classList.remove('active'));
@@ -187,7 +187,7 @@ function initProgramTabs() {
 function initModals() {
     // Registration buttons
     document.querySelectorAll('.register-btn').forEach(btn => {
-        btn.addEventListener('click', function(e) {
+        btn.addEventListener('click', function (e) {
             e.preventDefault();
             const modal = document.getElementById('registrationModal');
             const regType = this.getAttribute('data-type');
@@ -204,7 +204,7 @@ function initModals() {
     // Paper submission button
     const submitPaperBtn = document.getElementById('submitPaperBtn');
     if (submitPaperBtn) {
-        submitPaperBtn.addEventListener('click', function(e) {
+        submitPaperBtn.addEventListener('click', function (e) {
             e.preventDefault();
             const modal = document.getElementById('paperModal');
             if (modal) {
@@ -217,7 +217,7 @@ function initModals() {
     // Download brochure button
     const downloadBrochureBtn = document.getElementById('downloadBrochureBtn');
     if (downloadBrochureBtn) {
-        downloadBrochureBtn.addEventListener('click', function(e) {
+        downloadBrochureBtn.addEventListener('click', function (e) {
             e.preventDefault();
             showToast('Brochure download will be available soon!', 'info');
         });
@@ -225,7 +225,7 @@ function initModals() {
 
     // Close modal buttons
     document.querySelectorAll('.modal-close, .modal-overlay, .close-modal').forEach(el => {
-        el.addEventListener('click', function() {
+        el.addEventListener('click', function () {
             const modal = this.closest('.modal');
             if (modal) {
                 modal.classList.remove('active');
@@ -235,7 +235,7 @@ function initModals() {
     });
 
     // Close on Escape
-    document.addEventListener('keydown', function(e) {
+    document.addEventListener('keydown', function (e) {
         if (e.key === 'Escape') {
             document.querySelectorAll('.modal.active').forEach(modal => {
                 modal.classList.remove('active');
@@ -252,7 +252,7 @@ function initForms() {
     // Contact form
     const contactForm = document.getElementById('contactForm');
     if (contactForm) {
-        contactForm.addEventListener('submit', function(e) {
+        contactForm.addEventListener('submit', function (e) {
             e.preventDefault();
             if (validateForm(this)) {
                 const successModal = document.getElementById('successModal');
@@ -267,7 +267,7 @@ function initForms() {
     // Newsletter form
     const newsletterForm = document.getElementById('newsletterForm');
     if (newsletterForm) {
-        newsletterForm.addEventListener('submit', function(e) {
+        newsletterForm.addEventListener('submit', function (e) {
             e.preventDefault();
             const email = this.querySelector('input[type="email"]');
             if (email.value && isValidEmail(email.value)) {
@@ -282,7 +282,14 @@ function initForms() {
     // Paper submission form
     const paperForm = document.getElementById('paperForm');
     if (paperForm) {
-        paperForm.addEventListener('submit', function(e) {
+        paperForm.addEventListener('submit', function (e) {
+            // Allow real file upload if the form has multipart encoding
+            const enc = (this.getAttribute('enctype') || '').toLowerCase();
+            if (enc === 'multipart/form-data') {
+                return; // do not block submission
+            }
+
+            // Otherwise keep existing front-end-only behavior (other pages / older modal)
             e.preventDefault();
             if (validateForm(this)) {
                 showToast('Paper submitted successfully! You will receive confirmation via email.', 'success');
@@ -294,10 +301,11 @@ function initForms() {
         });
     }
 
+
     // Registration form
     const registrationForm = document.getElementById('registrationForm');
     if (registrationForm) {
-        registrationForm.addEventListener('submit', function(e) {
+        registrationForm.addEventListener('submit', function (e) {
             e.preventDefault();
             if (validateForm(this)) {
                 showToast('Registration submitted! You will receive payment instructions via email.', 'success');
@@ -357,7 +365,7 @@ function showToast(message, type = 'info') {
     toast.className = `toast ${type}`;
 
     let icon = '';
-    switch(type) {
+    switch (type) {
         case 'success':
             icon = '<i class="fas fa-check-circle"></i>';
             break;
@@ -395,4 +403,12 @@ function debounce(func, wait) {
     };
 }
 
-console.log('IRECSTEM 2026 - Website Scripts Loaded');
+/* ========================================
+   STATIC MODE - All motion effects removed
+======================================== */
+
+// All 3D card tilt, magnetic button, parallax scroll, particle effects,
+// logo animations, and cursor-based motion have been disabled
+// for a stable, static page experience
+
+console.log('IRECSTEM 2026 - Website Scripts Loaded (Static Mode)');

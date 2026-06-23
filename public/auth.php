@@ -1,118 +1,151 @@
 <?php
 /**
  * IRECSTEM 2026 - Authentication Handler
- * Login, Register, Logout (JSON Database)
  */
 
 require_once 'config.php';
 
 $message = '';
 $message_type = '';
+$show_verify_form = false;
+$show_login_verify = false;
+$pending_email = '';
+$pending_name = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = $_POST['action'] ?? '';
 
     if ($action === 'register') {
-        // Handle Registration
-        $full_name = sanitize($_POST['full_name'] ?? '');
+        $name = sanitize($_POST['name'] ?? '');
         $email = sanitize($_POST['email'] ?? '');
-        $password = $_POST['password'] ?? '';
-        $confirm_password = $_POST['confirm_password'] ?? '';
-        $institution = sanitize($_POST['institution'] ?? '');
-        $country = sanitize($_POST['country'] ?? '');
-        $dietary = sanitize($_POST['dietary'] ?? '');
-        $participation_type = sanitize($_POST['participation_type'] ?? 'in-person');
 
-        // Validation
-        if (empty($full_name) || empty($email) || empty($password)) {
-            $message = 'Please fill in all required fields.';
-            $message_type = 'error';
-        } elseif ($password !== $confirm_password) {
-            $message = 'Passwords do not match.';
-            $message_type = 'error';
-        } elseif (strlen($password) < 6) {
-            $message = 'Password must be at least 6 characters.';
+        if (empty($name) || empty($email)) {
+            $message = 'Please fill in all fields.';
             $message_type = 'error';
         } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
             $message = 'Please enter a valid email address.';
             $message_type = 'error';
         } else {
             $db = users();
-
-            // Check if email exists
             if ($db->exists('email', $email)) {
-                $message = 'An account with this email already exists.';
+                $message = 'This email has already registered. Please login below.';
                 $message_type = 'error';
             } else {
-                // Hash password and create user
-                $password_hash = password_hash($password, PASSWORD_DEFAULT);
+                $verification_code = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+                $verification_expiry = date('Y-m-d H:i:s', strtotime('+15 minutes'));
 
-                $user = [
-                    'full_name' => $full_name,
+                $_SESSION['pending_registration'] = [
+                    'name' => $name,
                     'email' => $email,
-                    'password' => $password_hash,
-                    'institution' => $institution,
-                    'country' => $country,
-                    'dietary' => $dietary,
-                    'participation_type' => $participation_type,
-                    'status' => 'approved',
-                    'is_admin' => 0
+                    'code' => $verification_code,
+                    'expiry' => $verification_expiry
                 ];
 
+                try {
+                    sendEmail($email, $name, 'IRECSTEM 2026 - Verification Code', '<p>Your code: ' . $verification_code . '</p>');
+                    $message = 'A verification code has been sent to your email.';
+                } catch (Exception $e) {
+                    $message = 'Verification code: ' . $verification_code . ' (SMTP not configured)';
+                }
+                $message_type = 'success';
+                $show_verify_form = true;
+                $pending_email = $email;
+                $pending_name = $name;
+            }
+        }
+    } elseif ($action === 'verify') {
+        $code = sanitize($_POST['code'] ?? '');
+
+        if (empty($_SESSION['pending_registration'])) {
+            $message = 'Session expired. Please register again.';
+            $message_type = 'error';
+        } else {
+            $pending = $_SESSION['pending_registration'];
+            if (strtotime($pending['expiry']) < time()) {
+                unset($_SESSION['pending_registration']);
+                $message = 'Verification code expired. Please register again.';
+                $message_type = 'error';
+            } elseif ($code !== $pending['code']) {
+                $message = 'Invalid verification code.';
+                $message_type = 'error';
+                $show_verify_form = true;
+                $pending_email = $pending['email'];
+                $pending_name = $pending['name'];
+            } else {
+                $db = users();
+                $user = [
+                    'name' => $pending['name'],
+                    'email' => $pending['email'],
+                    'status' => 'verified',
+                    'verified_at' => date('Y-m-d H:i:s'),
+                    'is_admin' => 0
+                ];
                 $user_id = $db->insert($user);
-
                 if ($user_id) {
-                    // Auto login after registration
                     $_SESSION['user_id'] = $user_id;
-                    $_SESSION['user_email'] = $email;
+                    $_SESSION['user_email'] = $pending['email'];
+                    $_SESSION['user_name'] = $pending['name'];
                     $_SESSION['is_admin'] = 0;
-
+                    unset($_SESSION['pending_registration']);
                     header('Location: dashboard.php');
                     exit;
-                } else {
-                    $message = 'Registration failed. Please try again.';
-                    $message_type = 'error';
                 }
             }
         }
     } elseif ($action === 'login') {
-        // Handle Login
         $email = sanitize($_POST['email'] ?? '');
-        $password = $_POST['password'] ?? '';
-
-        if (empty($email) || empty($password)) {
-            $message = 'Please enter both email and password.';
+        if (empty($email) || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            $message = 'Please enter a valid email.';
             $message_type = 'error';
         } else {
             $db = users();
             $user = $db->findBy('email', $email);
-
-            if ($user && password_verify($password, $user['password'])) {
+            if (!$user) {
+                $message = 'No registration found. Please register first.';
+                $message_type = 'error';
+            } else {
+                $login_code = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+                $db->update($user['id'], ['login_code' => $login_code]);
+                $_SESSION['login_code'] = $login_code;
+                $_SESSION['login_email'] = $email;
+                $_SESSION['login_user_id'] = $user['id'];
+                try {
+                    sendEmail($email, $user['name'] ?? 'User', 'IRECSTEM 2026 - Login Code', '<p>Your login code: ' . $login_code . '</p>');
+                    $message = 'A login code has been sent to your email.';
+                } catch (Exception $e) {
+                    $message = 'Login code: ' . $login_code . ' (SMTP not configured)';
+                }
+                $message_type = 'success';
+                $show_login_verify = true;
+            }
+        }
+    } elseif ($action === 'verify_login') {
+        $code = sanitize($_POST['code'] ?? '');
+        if (empty($_SESSION['login_code']) || $code !== $_SESSION['login_code']) {
+            $message = 'Invalid login code.';
+            $message_type = 'error';
+        } else {
+            $db = users();
+            $user = $db->findById($_SESSION['login_user_id']);
+            if ($user) {
                 $_SESSION['user_id'] = $user['id'];
                 $_SESSION['user_email'] = $user['email'];
+                $_SESSION['user_name'] = $user['name'] ?? '';
                 $_SESSION['is_admin'] = $user['is_admin'] ?? 0;
-
-                if ($user['is_admin'] ?? 0) {
-                    header('Location: admin/');
-                } else {
-                    header('Location: dashboard.php');
-                }
-                exit;
-            } else {
-                $message = 'Invalid email or password.';
-                $message_type = 'error';
             }
+            unset($_SESSION['login_code'], $_SESSION['login_email'], $_SESSION['login_user_id']);
+            if ($user && ($user['is_admin'] ?? 0)) {
+                header('Location: admin/');
+            } else {
+                header('Location: dashboard.php');
+            }
+            exit;
         }
     }
 }
 
-// If already logged in, redirect to dashboard
 if (isLoggedIn()) {
-    if (isAdmin()) {
-        header('Location: admin/');
-    } else {
-        header('Location: dashboard.php');
-    }
+    header('Location: dashboard.php');
     exit;
 }
 ?>
@@ -122,208 +155,141 @@ if (isLoggedIn()) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo isset($_GET['register']) ? 'Register' : 'Login'; ?> | IRECSTEM 2026</title>
+    <base href="./">
     <link rel="stylesheet" href="styles.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
-    <style>
-        .auth-container {
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 120px 20px 60px;
-            background: linear-gradient(135deg, var(--navy) 0%, var(--navy-dark) 100%);
-        }
-        .auth-card {
-            background: white;
-            padding: 50px;
-            border-radius: var(--radius-xl);
-            width: 100%;
-            max-width: 450px;
-            box-shadow: var(--shadow-xl);
-        }
-        .auth-header {
-            text-align: center;
-            margin-bottom: 30px;
-        }
-        .auth-header .logo {
-            font-size: 3rem;
-            color: var(--primary);
-            margin-bottom: 15px;
-        }
-        .auth-header h1 {
-            color: var(--navy);
-            font-size: 1.8rem;
-            margin-bottom: 5px;
-        }
-        .auth-header p {
-            color: var(--gray-500);
-        }
-        .auth-form .form-group {
-            margin-bottom: 20px;
-        }
-        .auth-form label {
-            display: block;
-            color: var(--dark);
-            font-weight: 500;
-            margin-bottom: 8px;
-        }
-        .auth-form input,
-        .auth-form select {
-            width: 100%;
-            padding: 14px 18px;
-            border: 2px solid var(--gray-200);
-            border-radius: var(--radius);
-            font-family: inherit;
-            font-size: 1rem;
-            transition: var(--transition);
-        }
-        .auth-form input:focus,
-        .auth-form select:focus {
-            outline: none;
-            border-color: var(--primary);
-        }
-        .auth-form .btn {
-            width: 100%;
-            margin-top: 10px;
-        }
-        .auth-footer {
-            text-align: center;
-            margin-top: 25px;
-            padding-top: 25px;
-            border-top: 1px solid var(--gray-200);
-        }
-        .auth-footer a {
-            color: var(--primary);
-            font-weight: 600;
-        }
-        .auth-footer a:hover {
-            text-decoration: underline;
-        }
-        .alert {
-            padding: 15px;
-            border-radius: var(--radius);
-            margin-bottom: 20px;
-        }
-        .alert-error {
-            background: #fef2f2;
-            color: #dc2626;
-            border: 1px solid #fecaca;
-        }
-        .alert-success {
-            background: #f0fdf4;
-            color: #16a34a;
-            border: 1px solid #bbf7d0;
-        }
-        .form-row {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-        }
-        @media (max-width: 480px) {
-            .form-row {
-                grid-template-columns: 1fr;
-            }
-            .auth-card {
-                padding: 30px 20px;
-            }
-        }
-    </style>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 </head>
 <body>
-    <div class="auth-container">
-        <div class="auth-card">
-            <div class="auth-header">
-                <div class="logo"><i class="fas fa-globe-americas"></i></div>
-                <h1><?php echo isset($_GET['register']) ? 'Create Account' : 'Welcome Back'; ?></h1>
-                <p>IRECSTEM 2026 <?php echo isset($_GET['register']) ? 'Registration' : 'Login'; ?></p>
-            </div>
+    <div class="bg-slideshow">
+        <div class="bg-slide bg-slide-1"></div>
+        <div class="bg-slide bg-slide-2"></div>
+        <div class="bg-slide bg-slide-3"></div>
+    </div>
+    <div class="bg-overlay"></div>
+    <div class="bg-accents"></div>
 
-            <?php if ($message): ?>
-                <div class="alert alert-<?php echo $message_type; ?>">
+    <nav class="navbar" id="navbar">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <a href="index.html">
+                    <div class="nav-logo">
+                        <img src="logo.png" alt="IRECSTEM Logo">
+                    </div>
+                    <div class="logo-text">
+                        <span class="logo-main">IRECSTEM</span>
+                        <span class="logo-year">2026</span>
+                    </div>
+                </a>
+            </div>
+            <button class="nav-toggle" id="navToggle" aria-label="Toggle Navigation">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+            <ul class="nav-menu" id="navMenu">
+                <li><a href="index.html" class="nav-link">Home</a></li>
+                <li><a href="about.html" class="nav-link">About</a></li>
+                <li><a href="call-for-papers.html" class="nav-link">Papers</a></li>
+                <li><a href="speakers.html" class="nav-link">Speakers</a></li>
+                <li><a href="program.html" class="nav-link">Program</a></li>
+                <li><a href="venue.html" class="nav-link">Venue</a></li>
+                <li><a href="contact.html" class="nav-link">Contact</a></li>
+                <li class="nav-auth"><a href="auth.php" class="btn btn-primary active">Login</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <section class="hero" style="min-height: 100vh; display: flex; align-items: center; justify-content: center;">
+        <div class="hero-container" style="padding-top: 100px; width: 100%;">
+            <div class="auth-card" style="max-width: 450px; margin: 0 auto; background: rgba(255,255,255,0.08); backdrop-filter: blur(10px); border: 1px solid rgba(252,209,22,0.3); border-radius: 24px; padding: 40px; text-align: center;">
+
+                <div style="margin-bottom: 30px;">
+                    <span class="gov-badge" style="margin-bottom: 20px; display: inline-flex;">
+                        <i class="fas fa-user-circle"></i>
+                        <?php echo isset($_GET['register']) ? 'Create Account' : ($show_verify_form ? 'Enter Code' : 'Welcome'); ?>
+                    </span>
+                </div>
+
+                <?php if ($message): ?>
+                <div class="alert alert-<?php echo $message_type; ?>" style="padding: 15px; border-radius: 12px; margin-bottom: 25px; font-size: 0.9rem; text-align: left;">
                     <?php echo $message; ?>
                 </div>
-            <?php endif; ?>
+                <?php endif; ?>
 
-            <?php if (isset($_GET['register'])): ?>
-            <!-- Registration Form -->
-            <form class="auth-form" method="POST" action="">
-                <input type="hidden" name="action" value="register">
-
-                <div class="form-group">
-                    <label for="full_name">Full Name *</label>
-                    <input type="text" id="full_name" name="full_name" required placeholder="Enter your full name">
-                </div>
-
-                <div class="form-group">
-                    <label for="email">Email Address *</label>
-                    <input type="email" id="email" name="email" required placeholder="Enter your email">
-                </div>
-
-                <div class="form-row">
+                <?php if ($show_verify_form): ?>
+                <form method="POST" action="" style="text-align: left;">
+                    <input type="hidden" name="action" value="verify">
+                    <p style="color: rgba(255,255,255,0.7); margin-bottom: 20px; font-size: 0.9rem;">
+                        Enter the 6-digit code sent to:<br>
+                        <strong style="color: var(--yellow);"><?php echo htmlspecialchars($pending_email); ?></strong>
+                    </p>
                     <div class="form-group">
-                        <label for="password">Password *</label>
-                        <input type="password" id="password" name="password" required placeholder="Min 6 characters">
+                        <input type="text" name="code" class="code-input" style="width: 100%; padding: 16px; background: rgba(255,255,255,0.1); border: 2px solid rgba(255,209,22,0.3); border-radius: 12px; color: white; font-size: 1.5rem; text-align: center; letter-spacing: 8px;" maxlength="6" required placeholder="------" autocomplete="off">
+                    </div>
+                    <button type="submit" class="btn btn-primary" style="width: 100%; padding: 16px; font-size: 1rem; margin-top: 10px;">Verify Code</button>
+                    <p style="margin-top: 20px; color: rgba(255,255,255,0.5); font-size: 0.85rem;">
+                        <a href="auth.php" style="color: var(--yellow);">Use different email</a>
+                    </p>
+                </form>
+
+                <?php elseif ($show_login_verify): ?>
+                <form method="POST" action="" style="text-align: left;">
+                    <input type="hidden" name="action" value="verify_login">
+                    <p style="color: rgba(255,255,255,0.7); margin-bottom: 20px; font-size: 0.9rem;">
+                        Enter the login code sent to:<br>
+                        <strong style="color: var(--yellow);"><?php echo htmlspecialchars($_SESSION['login_email'] ?? ''); ?></strong>
+                    </p>
+                    <div class="form-group">
+                        <input type="text" name="code" class="code-input" style="width: 100%; padding: 16px; background: rgba(255,255,255,0.1); border: 2px solid rgba(255,209,22,0.3); border-radius: 12px; color: white; font-size: 1.5rem; text-align: center; letter-spacing: 8px;" maxlength="6" required placeholder="------" autocomplete="off">
+                    </div>
+                    <button type="submit" class="btn btn-primary" style="width: 100%; padding: 16px; font-size: 1rem; margin-top: 10px;">Login</button>
+                    <p style="margin-top: 20px; color: rgba(255,255,255,0.5); font-size: 0.85rem;">
+                        <a href="auth.php" style="color: var(--yellow);">Use different email</a>
+                    </p>
+                </form>
+
+                <?php elseif (isset($_GET['register'])): ?>
+                <form method="POST" action="" style="text-align: left;">
+                    <input type="hidden" name="action" value="register">
+                    <div class="form-group">
+                        <label style="display: block; color: rgba(255,255,255,0.9); margin-bottom: 8px; font-weight: 500;">Full Name</label>
+                        <input type="text" name="name" required placeholder="Enter your full name" style="width: 100%; padding: 14px 16px; background: rgba(255,255,255,0.1); border: 2px solid rgba(255,209,22,0.3); border-radius: 12px; color: white; font-size: 1rem;">
                     </div>
                     <div class="form-group">
-                        <label for="confirm_password">Confirm *</label>
-                        <input type="password" id="confirm_password" name="confirm_password" required placeholder="Confirm password">
+                        <label style="display: block; color: rgba(255,255,255,0.9); margin-bottom: 8px; font-weight: 500;">Email Address</label>
+                        <input type="email" name="email" required placeholder="Enter your email" style="width: 100%; padding: 14px 16px; background: rgba(255,255,255,0.1); border: 2px solid rgba(255,209,22,0.3); border-radius: 12px; color: white; font-size: 1rem;">
                     </div>
-                </div>
+                    <button type="submit" class="btn btn-primary" style="width: 100%; padding: 16px; font-size: 1rem; margin-top: 10px;">Create Account</button>
+                </form>
+                <p style="margin-top: 25px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.1); color: rgba(255,255,255,0.6); font-size: 0.9rem;">
+                    Already have an account? <a href="auth.php" style="color: var(--yellow); font-weight: 600;">Login here</a>
+                </p>
 
-                <div class="form-group">
-                    <label for="participation_type">Participation Type</label>
-                    <select id="participation_type" name="participation_type">
-                        <option value="in-person">In-Person (Venue)</option>
-                        <option value="virtual">Virtual (Online)</option>
-                    </select>
-                </div>
+                <?php else: ?>
+                <form method="POST" action="" style="text-align: left;">
+                    <input type="hidden" name="action" value="login">
+                    <div class="form-group">
+                        <label style="display: block; color: rgba(255,255,255,0.9); margin-bottom: 8px; font-weight: 500;">Email Address</label>
+                        <input type="email" name="email" required placeholder="Enter your registered email" style="width: 100%; padding: 14px 16px; background: rgba(255,255,255,0.1); border: 2px solid rgba(255,209,22,0.3); border-radius: 12px; color: white; font-size: 1rem;">
+                    </div>
+                    <button type="submit" class="btn btn-primary" style="width: 100%; padding: 16px; font-size: 1rem; margin-top: 10px;">Send Login Code</button>
+                </form>
+                <p style="margin-top: 25px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.1); color: rgba(255,255,255,0.6); font-size: 0.9rem;">
+                    Don't have an account? <a href="auth.php?register=1" style="color: var(--yellow); font-weight: 600;">Register here</a>
+                </p>
+                <?php endif; ?>
 
-                <div class="form-group">
-                    <label for="institution">Institution/Organization</label>
-                    <input type="text" id="institution" name="institution" placeholder="Enter your institution">
-                </div>
-
-                <div class="form-group">
-                    <label for="country">Country</label>
-                    <input type="text" id="country" name="country" placeholder="Enter your country">
-                </div>
-
-                <div class="form-group">
-                    <label for="dietary">Dietary Requirements</label>
-                    <input type="text" id="dietary" name="dietary" placeholder="e.g., Vegetarian, None">
-                </div>
-
-                <button type="submit" class="btn btn-primary">Create Account</button>
-            </form>
-
-            <div class="auth-footer">
-                Already have an account? <a href="auth.php">Login here</a>
             </div>
-
-            <?php else: ?>
-            <!-- Login Form -->
-            <form class="auth-form" method="POST" action="">
-                <input type="hidden" name="action" value="login">
-
-                <div class="form-group">
-                    <label for="email">Email Address</label>
-                    <input type="email" id="email" name="email" required placeholder="Enter your email">
-                </div>
-
-                <div class="form-group">
-                    <label for="password">Password</label>
-                    <input type="password" id="password" name="password" required placeholder="Enter your password">
-                </div>
-
-                <button type="submit" class="btn btn-primary">Login</button>
-            </form>
-
-            <div class="auth-footer">
-                Don't have an account? <a href="auth.php?register=1">Register here</a>
-            </div>
-            <?php endif; ?>
         </div>
-    </div>
+    </section>
+
+    <button class="back-to-top" id="backToTop">
+        <i class="fas fa-chevron-up"></i>
+    </button>
+
+    <script src="script.js"></script>
 </body>
 </html>

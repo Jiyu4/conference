@@ -1,53 +1,10 @@
-# Apache Configuration for IRECSTEM 2026
-# Root .htaccess for public directory
-
-# Enable Rewrite Engine
-RewriteEngine On
-
-# If the request is not for a valid file/directory, serve index
-RewriteCond %{REQUEST_FILENAME} !-f
-RewriteCond %{REQUEST_FILENAME} !-d
-RewriteRule ^ index.html [L]
+# Apache Configuration for IRECSTEM 2026 - Public Directory
 
 # Prevent directory listing
 Options -Indexes -MultiViews
 
 # Set default character set
 AddDefaultCharset UTF-8
-
-# Protect sensitive files from direct access
-<FilesMatch "^(config)\.php$">
-    Order allow,deny
-    Deny from all
-</FilesMatch>
-
-<FilesMatch "\.json$">
-    Order allow,deny
-    Deny from all
-</FilesMatch>
-
-# Protect data directory
-<IfModule mod_rewrite.c>
-    RewriteRule ^data/ - [F,L]
-    RewriteRule ^uploads/ - [F,L]
-</IfModule>
-
-# For Apache 2.4+
-<IfModule mod_access_compat.c>
-    <Directory "data">
-        Require all denied
-    </Directory>
-    <Directory "uploads">
-        Require all granted
-    </Directory>
-</IfModule>
-
-# For Apache 2.4+ (alternative)
-<IfModule mod_authz_core.c>
-    <Files "*.json">
-        Require all denied
-    </Files>
-</IfModule>
 
 # PHP settings (if applicable)
 <IfModule mod_php.c>

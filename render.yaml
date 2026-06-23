@@ -4,11 +4,18 @@
 services:
   - type: web
     name: irecstem2026
+    rootDir: public
     runtime: php
     plan: free
     buildCommand: |
-      echo "No build required for PHP"
+      # Install Composer dependencies if needed
+      if [ -f composer.json ]; then
+        composer install --no-dev --optimize-autoloader
+      fi
     startCommand: |
+      # Ensure data directories are writable
+      chmod -R 755 data/
+      chmod -R 755 uploads/
       php -S $HOST:$PORT
     headers:
       - path: /*
@@ -17,13 +24,10 @@ services:
           X-Frame-Options: SAMEORIGIN
           X-Content-Type-Options: nosniff
           X-XSS-Protection: 1; mode=block
-    routes:
-      - path: /*
-        type: rewrite
-        destination: /public/index.php
-
 
 # Environment variables
 envVars:
   - key: PHP_VERSION
     value: "8.2"
+  - key: APP_ENV
+    value: production
